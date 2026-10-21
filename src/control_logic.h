@@ -1,12 +1,10 @@
 #pragma once
-
 #include <stdbool.h>
 
-// Inicializa relés y LEDs
 void control_init(void);
+void control_update(bool rel_grueso, bool rel_fino, bool rel_descarga);
 
-// Actualiza salidas. 
-// 'permiso' viene del switch Start/Stop.
-// Los bool 'manual_*' vienen de los interruptores de accionamiento directo.
-void control_update(float peso_actual, float peso_objetivo, bool permiso, 
-                    bool manual_grueso, bool manual_fino, bool manual_descarga);
+// Entradas
+bool control_boton_inicio(void);
+bool control_boton_paro(void);
+bool control_pedal_descarga(void);
