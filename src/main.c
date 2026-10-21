@@ -29,8 +29,8 @@
  *                     (solo tienen efecto si MODO_SIMULADO=1)
  * ============================================================ */
 #define MODO_SIMULADO       0
-//#define SIM_FORZAR_INICIO   1
-//#define SIM_FORZAR_PEDAL    1
+#define SIM_FORZAR_INICIO   0
+#define SIM_FORZAR_PEDAL    0
 
 /* ============================================================
  *  PARÁMETROS DEL PROCESO (ajustables)
