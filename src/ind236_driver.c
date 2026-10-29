@@ -41,10 +41,11 @@ esp_err_t ind236_init(void) {
     };
     ESP_RETURN_ON_ERROR(uart_driver_install(UART_SICS, BUF_SIZE, 0, 0, NULL, 0), TAG, "install");
     ESP_RETURN_ON_ERROR(uart_param_config(UART_SICS, &cfg), TAG, "config");
-    ESP_RETURN_ON_ERROR(uart_set_pin(UART_SICS, PIN_TX_SICS, PIN_RX_SICS,
+        ESP_RETURN_ON_ERROR(uart_set_pin(UART_SICS, PIN_TX_SICS, PIN_RX_SICS,
                                      UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE), TAG, "pins");
-    ESP_LOGI(TAG, "UART1 listo: 9600 8N1 TX=%d RX=%d | FACTOR_DECIMALES=%.0f",
-             PIN_TX_SICS, PIN_RX_SICS, FACTOR_DECIMALES);
+    uart_set_rx_timeout(UART_SICS, 2);   /* entrega la trama ~2 caracteres después de su último byte */
+    ESP_LOGI(TAG, "UART1 listo: %d 8N1 TX=%d RX=%d | FACTOR_DECIMALES=%.0f",
+             BAUD_SICS, PIN_TX_SICS, PIN_RX_SICS, FACTOR_DECIMALES);
     return ESP_OK;
 }
 
@@ -84,26 +85,17 @@ static bool parse_toledo(const uint8_t *buf, int len, float *out) {
     return true;
 }
 
-esp_err_t ind236_read_continuous(float *peso) {
-    uint8_t chunk[64];
-    int len = uart_read_bytes(UART_SICS, chunk, sizeof(chunk), pdMS_TO_TICKS(20));
-    if (len <= 0) return ESP_ERR_TIMEOUT;
-
-#if DEBUG_HEXDUMP
-    ESP_LOG_BUFFER_HEXDUMP("ind236", chunk, len, ESP_LOG_INFO);
-#endif
-
-    for (int i = 0; i < len; i++) {
-        if (s_idx < BUF_SIZE) s_buf[s_idx++] = chunk[i];
-        if (chunk[i] == 0x0D || s_idx >= BUF_SIZE) {
-            float v;
-            if (parse_toledo(s_buf, s_idx, &v)) {
-                *peso = v;
-                s_idx = 0;
-                return ESP_OK;
-            }
+esp_err_t ind236_read_continuous(float *peso, TickType_t espera) {
+    uint8_t c;
+    while (uart_read_bytes(UART_SICS, &c, 1, espera) == 1) {
+        if (c == 0x02) s_idx = 0;                      /* STX: empieza trama nueva */
+        if (s_idx < BUF_SIZE) s_buf[s_idx++] = c;
+        if (c == 0x0D) {                               /* CR: trama completa */
+            int n = s_idx;
             s_idx = 0;
+            float v;
+            if (parse_toledo(s_buf, n, &v)) { *peso = v; return ESP_OK; }
         }
     }
-    return ESP_ERR_NOT_FOUND;
+    return ESP_ERR_TIMEOUT;
 }
