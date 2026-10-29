@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HMI Empacadoras</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e3e7eb;--pn:#f4f6f8;--ln:#9aa6b1;--tx:#1d2830;--mt:#5d6b77;--gy:#a3adb6;--g:#2fbf5b;--r:#e5282d}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:600 15px/1.2 "Barlow Semi Condensed","Arial Narrow",Arial,sans-serif;background:var(--bg);color:var(--tx);display:grid;grid-template-rows:auto 1fr auto;height:100dvh;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+header,nav{display:flex;gap:6px;align-items:center;padding:6px 8px;background:#d3d9df;flex-wrap:wrap}
+header{border-bottom:2px solid var(--ln)}nav{border-top:2px solid var(--ln)}
+header h1{font-size:17px;margin:0 auto 0 0;font-weight:700;white-space:nowrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.chip{background:var(--pn);border:2px solid var(--ln);border-radius:3px;padding:4px 8px;text-align:left;min-width:120px}
+.chip small{display:block;color:var(--mt);font-size:12px}
+.chip.sel{border-color:#1b6aa8;box-shadow:inset 0 0 0 1px #1b6aa8}.chip.al{border-color:var(--r);background:#f9d6d7}
+main{min-height:0;overflow:auto}
+.pg{display:none}.pg.show{display:grid}
+#vMain{grid-template-columns:1fr 270px;height:100%}
+#vMain>svg{width:100%;height:100%;min-height:0}
+.side{background:var(--pn);border-left:2px solid var(--ln);padding:8px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+#vMain:not(.cfgm) #cfp,#vMain.cfgm #ctl{display:none}
+h3{margin:0;font-size:13px;color:var(--mt);font-weight:600}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.bt{background:#d5dbe1;border:2px solid #7f8c97;border-radius:3px;padding:10px 6px;font-weight:700;text-align:center}
+.bt.on{background:#1b6aa8;border-color:#124b78;color:#fff}
+.bt.go{background:#c3ebd0;border-color:var(--g)}.bt.stp{background:#f6c9cb;border-color:var(--r)}
+.bt:disabled{opacity:.4;cursor:not-allowed}
+.bt.open{background:var(--g);color:#05200d;border-color:#1c8a3e}
+nav .bt{flex:1;padding:12px 6px}
+#vAll{grid-template-columns:1fr 1fr;grid-auto-rows:minmax(300px,1fr);gap:8px;padding:8px;height:100%}
+.cd{background:var(--pn);border:2px solid var(--ln);border-radius:3px;display:flex;flex-direction:column;min-height:0;cursor:pointer;padding:4px}
+.cd.al{border-color:var(--r);background:#fbe4e5}
+.cd b{font-size:16px}.cd svg{flex:1;min-height:0;width:100%}
+label{display:grid;gap:3px;font-size:13px;color:var(--mt)}
+select{background:#fff;border:2px solid var(--ln);color:var(--tx);padding:7px;font:inherit;font-size:17px;border-radius:3px;width:100%}
+input[type=number]{background:#fff;border:2px solid var(--ln);color:var(--tx);padding:7px;font:inherit;font-size:17px;border-radius:3px;width:100%}
+.ck{display:flex;gap:8px;align-items:center;color:var(--tx);font-size:15px}
+.mono{font:12px/1.3 ui-monospace,Menlo,Consolas,monospace;background:#fff;border:1px solid var(--ln);padding:6px;color:var(--mt);word-break:break-all}
+.cl{fill:var(--gy)}.op{fill:var(--g)}.er{fill:var(--r)}
+.gt{stroke:#4a5763;stroke-width:2;transition:transform .35s,fill .15s;transform-box:fill-box}
+.fl{stroke:#4a5763;stroke-width:2;transition:transform .5s,fill .15s}
+[data-k=gG]{transform-origin:left center}[data-k=gF]{transform-origin:right center}
+[data-k=gG].open,[data-k=gF].open{transform:scaleX(.18)}
+[data-k=dL]{transform-origin:232px 505px}[data-k=dR]{transform-origin:408px 505px}
+[data-k=dL].open{transform:rotate(35deg)}[data-k=dR].open{transform:rotate(-35deg)}
+.gr{stroke:#8a5a2b;stroke-width:7;stroke-linecap:round;stroke-dasharray:0 11;animation:fl .4s linear infinite}
+@keyframes fl{to{stroke-dashoffset:-11}}
+.belt{stroke:#7f8c97;stroke-width:3;stroke-dasharray:18 14}
+.belt.mv{animation:bf .8s linear infinite}
+@keyframes bf{to{stroke-dashoffset:-32}}
+.blink{animation:bk 1s steps(2) infinite}
+@keyframes bk{50%{opacity:.4}}
+.pdl{cursor:pointer;touch-action:none}
+[data-k=ft]{transform:translateY(-26px);transition:transform .15s}[data-k=ft].on{transform:none}
+[data-k=pp]{transform-origin:575px 672px;transform:rotate(-15deg);transition:transform .15s}[data-k=pp].on{transform:none}
+@media(max-width:700px){#vMain{grid-template-columns:1fr;grid-template-rows:50% 50%}.side{border-left:0;border-top:2px solid var(--ln)}#vAll{grid-template-columns:1fr;height:auto}}
+@media(prefers-reduced-motion:reduce){.gr,.belt.mv,.blink{animation:none}}
+button:focus-visible,input:focus-visible{outline:3px solid #1b6aa8;outline-offset:1px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<pattern id="gp" width="12" height="12" patternUnits="userSpaceOnUse"><rect width="12" height="12" fill="#7a4e24"/><circle cx="3" cy="3" r="3" fill="#c8924f" stroke="#6b4320" stroke-width=".8"/><circle cx="9" cy="3.5" r="2.8" fill="#b9803f" stroke="#6b4320" stroke-width=".8"/><circle cx="6" cy="9" r="3" fill="#d09a57" stroke="#6b4320" stroke-width=".8"/></pattern>
+<clipPath id="kB"><polygon points="233,411 406,411 406,499 321,547 319,547 233,499"/></clipPath>
+<clipPath id="kS"><rect x="289" y="698" width="92" height="101" rx="13"/></clipPath>
+<clipPath id="kT"><polygon points="213,106 415,106 415,214 349,271 278,271 213,214"/></clipPath>
+</defs></svg>
+<header><h1>EMPACADORAS · SACOS</h1><span id="hc" style="display:contents"></span></header>
+<main>
+<section id="vMain" class="pg show">
+<aside class="side" id="ctl" style="order:2">
+<h3>MODO</h3>
+<div class="row"><button class="bt" id="mA">AUTOMÁTICO</button><button class="bt" id="mM">MANUAL</button></div>
+<h3>CICLO AUTOMÁTICO</h3>
+<div class="row"><button class="bt go" id="bI">INICIO</button><button class="bt stp" id="bP">PARO</button></div>
+<h3>COMPUERTAS MANUAL</h3>
+<button class="bt" id="mg">GRUESA · CERRADA</button>
+<button class="bt" id="mf">FINA · CERRADA</button>
+<button class="bt" id="md">DESCARGA · CERRADA</button>
+<button class="bt stp" id="bR">RECONOCER ALARMA</button>
+<h3>PEDAL (SIMULACIÓN)</h3>
+<label class="ck"><input type="checkbox" id="pL"> Bypass pedal (mantener pisado)</label>
+<label class="ck"><input type="checkbox" id="pI"> Bypass selector INICIO</label>
+<div style="color:var(--mt);font-size:13px">También puedes mantener presionado el pedal del dibujo o la barra espaciadora.</div>
+</aside>
+<aside class="side" id="cfp" style="order:2">
+<h3 id="cfT">AJUSTES</h3>
+<label>Peso objetivo (kg)<input type="number" id="iO" step="0.1" min="1"></label>
+<label>Corte de grueso (kg)<input type="number" id="iC" step="0.1" min="0"></label>
+<div class="row"><label>Cola grueso (kg)<input type="number" id="iG" step="0.1" min="0"></label><label>Cola fino (kg)<input type="number" id="iF" step="0.1" min="0"></label></div>
+<button class="bt go" id="bA">APLICAR AJUSTES</button>
+<div class="mono" id="cfJ"></div>
+<h3>CALIBRACIÓN · lectura <b id="cfR" style="font-size:18px;color:var(--tx)">0.0</b> kg</h3>
+<button class="bt" id="bZ">CERO (balde vacío)</button>
+<div class="row" style="align-items:end"><label>Patrón (kg)<input type="number" id="iS" step="0.1" value="20"></label><button class="bt" id="bS">SPAN</button></div>
+<div id="cfM" style="color:var(--mt);font-size:13px"></div>
+<h3>SIMULAR FALLAS</h3>
+<label class="ck"><input type="checkbox" id="fC"> Celdas de carga</label>
+<label class="ck"><input type="checkbox" id="fG"> Compuerta gruesa no abre</label>
+<label class="ck"><input type="checkbox" id="fO"> Operador pisa el pedal solo</label>
+<h3>PUERTO SERIAL · ESTA EMPACADORA</h3>
+<div class="ck"><span id="sDot" style="width:12px;height:12px;border-radius:50%;background:#a3adb6;display:inline-block;border:1px solid #4a5763;flex:none"></span><span id="sSt" style="font-size:14px">Desconectado</span></div>
+<label>Velocidad (baudios)<select id="sBd"><option>9600</option><option>19200</option><option>38400</option><option>57600</option><option selected>115200</option><option>230400</option><option>460800</option><option>921600</option></select></label>
+<div class="row"><button class="bt go" id="sCon">ELEGIR PUERTO Y CONECTAR</button><button class="bt stp" id="sDis" disabled>DESCONECTAR</button></div>
+<div class="mono" id="sLog" style="white-space:pre-wrap;min-height:56px">Sin datos</div>
+</aside>
+</section>
+<section id="vAll" class="pg"></section>
+</main>
+<nav><button class="bt on" data-v="vMain">PRINCIPAL</button><button class="bt" data-v="vAll">EMPACADORAS</button><button class="bt" data-v="vCfg">CONFIGURACIÓN</button></nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const ST={IDLE:'ESPERA',LLENO:'LLENO',SACO:'ENTRA SACO',GRUESO:'LLENADO GRUESO',FINO:'LLENADO FINO',PESAR:'ESTABILIZANDO',DESCARGA:'DESCARGANDO',CIERRE:'CIERRE',SALIDA:'SALE SACO'};
+const mk=(n,o,c,run)=>({n,c:{o,c,g:.5,f:.3},mode:'A',run,st:'IDLE',t:0,w:0,tail:0,g:0,f:0,d:0,m:{g:0,f:0,d:0},fl:{cell:0,gate:0},al:'',ae:'',tg:0,k:0,sx:-480,tx:-480,sw:0,off:0,span:1,belt:0,ped:0,pedL:0,pe:false,tp:0,opr:0,opt:0,ot:0,dl:0,ovf:0,iByp:0});
+const P=[mk(1,50,40,1),mk(2,25,20,1),mk(3,40,32,1),mk(4,50,40,0)];
+[[0,14],[1,9],[2,30]].forEach(([i,w])=>{const p=P[i];p.w=w;p.st='GRUESO';p.sx=0;p.tx=0;p.sw=0});
+P[1].opr=P[2].opr=1;
+let sel=0,view='vMain';
+const rd=p=>(p.w-p.off)*p.span;
+function alarm(p,m,e){p.al=m;p.ae=e;p.run=false;p.st='IDLE';p.g=p.f=p.d=0;p.dl=0}
+function stopNow(p){p.run=false;p.st='IDLE';p.g=p.f=p.d=0;p.dl=0;p.tail=0;p.m={g:0,f:0,d:0}}
+function step(p,dt){
+ const c=p.c,o=c.o;
+ p.sx+=Math.sign(p.tx-p.sx)*Math.min(Math.abs(p.tx-p.sx),320*dt);p.belt=Math.abs(p.tx-p.sx)>1;
+ const sb=p.sx>420;if(sb&&!p.opt){p.k++;p.ot=.8}p.opt=sb;p.ot=Math.max(0,p.ot-dt);
+ p.tp=p.st==='DESCARGA'?p.tp+dt:0;
+ const pe=p.pe=!!(p.ped||p.pedL||(p.opr&&p.tp>1.5));
+ if(p.live){p.belt=0;p.pe=!!p.pedX;return}
+ if(p.fl.cell&&!p.al)alarm(p,'FALLA CELDAS DE CARGA','C');
+ if(p.al){p.g=p.f=0;p.d=(p.mode==='M'&&p.m.d&&pe)?1:0}
+ else if(p.mode==='M'){p.g=p.m.g;p.f=p.m.f;p.d=p.m.d&&pe?1:0}
+ else{
+  p.g=p.f=p.d=0;
+  switch(p.st){
+   case'IDLE':if(p.run){p.st='SACO';p.sw=0;p.tx=0}break;
+   case'SACO':if(Math.abs(p.sx)<1)p.st='GRUESO';break;
+   case'GRUESO':p.g=1;p.f=1;if(rd(p)>=c.c-c.g){p.g=0;p.tail+=c.g;p.st='FINO'}break;
+   case'FINO':p.f=1;if(rd(p)>=o-c.f){p.f=0;p.tail+=c.f;p.st='PESAR';p.t=0}break;
+   case'PESAR':p.t+=dt;if(p.t>1.2)p.st='DESCARGA';break;
+   case'DESCARGA':if(pe)p.dl=1;p.d=p.dl?1:0;if(p.w<=.01){p.w=0;p.d=0;p.dl=0;p.st='CIERRE';p.t=0}break;
+   case'CIERRE':p.t+=dt;if(p.t>.7){p.st='SALIDA';p.tx=480}break;
+   case'SALIDA':if(p.sx>=479){p.sx=-480;p.tx=-480;p.sw=0;p.st='IDLE'}break;
+  }
+ }
+ if(p.ovf){p.g=p.f=0}
+ p.tg=p.g?p.tg+dt:0;
+ if(p.tg>2&&p.fl.gate&&!p.al)alarm(p,'FALLA COMPUERTA GRUESA','G');
+ if(p.g&&!p.fl.gate)p.w+=.24*o*dt;
+ if(p.f)p.w+=.05*o*dt;
+ if(p.tail>0){const q=Math.min(p.tail,5*dt);p.w+=q;p.tail-=q}
+ if(p.d&&p.w>0){const q=Math.min(p.w,.5*o*dt);p.w-=q;if(Math.abs(p.sx)<20)p.sw+=q}
+ if(p.w>o*1.3){if(!p.ovf&&!p.al)alarm(p,'SOBRELLENADO DEL BALDE','G');p.ovf=1}else p.ovf=0;
+}
+/* ---------- Dibujo de la máquina (se instancia 5 veces) ---------- */
+const XS=[303,310,317,324,331].map((x,i)=>`<line class="gr${i%2?'':' ex'}" x1="${x}" x2="${x}" y1="342" y2="450" style="animation-duration:${(.34+i*.07).toFixed(2)}s;animation-delay:-${i*.13}s;stroke-dashoffset:${i*4}"/>`).join('');
+const XD=[307,314,321,328,335].map((x,i)=>`<line class="gr" x1="${x}" x2="${x}" y1="552" y2="702" style="animation-duration:${(.3+i*.06).toFixed(2)}s;animation-delay:-${i*.11}s;stroke-dashoffset:${i*3}"/>`).join('');
+const MACH=`<svg viewBox="165 90 720 770" preserveAspectRatio="xMidYMid meet" stroke-linejoin="round" font-family="Barlow Semi Condensed,Arial Narrow,Arial,sans-serif">
+<polygon points="213,106 415,106 415,214 349,271 278,271 213,214" fill="#fff"/>
+<rect x="213" y="108" width="203" height="205" fill="url(#gp)" clip-path="url(#kT)"/>
+<polygon points="213,106 415,106 415,214 349,271 278,271 213,214" fill="none" stroke="#2b3640" stroke-width="3"/>
+<text x="314" y="170" text-anchor="middle" font-size="20" font-weight="700" fill="#1b1209" stroke="#fff" stroke-width="4" paint-order="stroke">TOLVA ALIMENTADORA</text>
+<path d="M277,272V340M350,272V340" stroke="#2b3640" stroke-width="3"/>
+<rect x="279" y="274" width="70" height="34" fill="url(#gp)"/>
+<rect data-k="gG" class="gt cl" x="279" y="309" width="48" height="30"/>
+<rect data-k="gF" class="gt cl" x="328" y="309" width="21" height="30"/>
+<g font-size="15" fill="#4b5a67"><text x="268" y="329" text-anchor="end">GRUESO</text><text x="358" y="329">FINO</text></g>
+<path d="M265,342V393H187V585L297,625V675H362V625L472,585V393H367V342" fill="none" stroke="#2b3640" stroke-width="3"/>
+<g data-k="s1" visibility="hidden">${XS}</g>
+<g stroke="#2b3640" stroke-width="3"><line x1="243" y1="384" x2="243" y2="411"/><line x1="396" y1="383" x2="396" y2="411"/></g>
+<ellipse data-k="c1" cx="243" cy="380" rx="10" ry="7" fill="#6f8496" stroke="#2b3640" stroke-width="2"/>
+<ellipse data-k="c2" cx="396" cy="379" rx="10" ry="7" fill="#6f8496" stroke="#2b3640" stroke-width="2"/>
+<g font-size="15" fill="#4b5a67"><text x="226" y="366" text-anchor="end">CELDA 1</text><text x="413" y="365">CELDA 2</text></g>
+<polygon points="233,411 406,411 406,499 321,547 319,547 233,499" fill="#fff"/>
+<rect data-k="lv" x="233" y="548" width="174" height="150" fill="url(#gp)" clip-path="url(#kB)"/>
+<polygon points="232,410 407,410 407,500 322,548 318,548 232,500" fill="none" stroke="#2b3640" stroke-width="3"/>
+<text x="320" y="436" text-anchor="middle" font-size="16" fill="#4b5a67">BALDE</text>
+<polygon data-k="dL" class="fl cl" points="232,499 319,541 319,553 232,511"/>
+<polygon data-k="dR" class="fl cl" points="408,499 321,541 321,553 408,511"/>
+<text x="222" y="535" text-anchor="end" font-size="15" fill="#4b5a67">DESCARGA</text>
+<g data-k="s2" visibility="hidden">${XD}</g>
+<rect x="182" y="790" width="690" height="46" rx="23" fill="#cfd5db" stroke="#2b3640" stroke-width="3"/>
+<line data-k="bl" class="belt" x1="215" y1="799" x2="840" y2="799"/>
+<text x="527" y="823" text-anchor="middle" font-size="19" font-weight="700" fill="#2b3640">BANDA TRANSPORTADORA</text>
+<g data-k="pd" class="pdl">
+<line data-k="pw" x1="684" y1="552" x2="474" y2="552" stroke="#9aa6b1" stroke-width="3" stroke-dasharray="8 6"/>
+<circle data-k="pm" cx="694" cy="552" r="9" fill="#a3adb6" stroke="#4a5763" stroke-width="2"/>
+<text data-k="pl" x="622" y="533" text-anchor="middle" font-size="15" font-weight="700" fill="#4b5a67">PEDAL OPERADOR</text>
+<polygon points="552,692 700,692 690,676 562,676" fill="#8a96a1" stroke="#2b3640" stroke-width="2"/>
+<rect data-k="pp" x="575" y="664" width="110" height="10" rx="3" fill="#a3adb6" stroke="#2b3640" stroke-width="2"/>
+<g data-k="ft"><rect x="598" y="560" width="22" height="84" rx="9" fill="#54616d"/><path d="M590,644 H622 L668,650 Q682,654 682,660 V664 H590 Z" fill="#2b3640"/></g>
+<rect x="545" y="540" width="165" height="156" fill="transparent"/>
+</g>
+<g data-k="sk">
+<rect x="288" y="697" width="94" height="103" rx="14" fill="#fff"/>
+<rect data-k="sf" x="289" y="800" width="92" height="0" fill="url(#gp)" clip-path="url(#kS)"/>
+<rect x="288" y="697" width="94" height="103" rx="14" fill="none" stroke="#2b3640" stroke-width="3"/>
+<text x="335" y="738" text-anchor="middle" font-size="20" font-weight="700" fill="#1d2830" stroke="#fff" stroke-width="4" paint-order="stroke">SACO</text>
+<text data-k="sw" x="335" y="764" text-anchor="middle" font-size="17" fill="#1d2830" stroke="#fff" stroke-width="4" paint-order="stroke">0.0 kg</text>
+</g>
+<g><rect x="847" y="740" width="8" height="50" fill="#8a96a1" stroke="#2b3640" stroke-width="2"/>
+<line data-k="sb" x1="834" y1="750" x2="774" y2="750" stroke="#e5282d" stroke-width="2" stroke-dasharray="5 4"/>
+<rect x="832" y="738" width="24" height="24" rx="4" fill="#54616d" stroke="#2b3640" stroke-width="2"/>
+<circle data-k="sl" cx="844" cy="750" r="6" fill="#a3adb6" stroke="#1d2830" stroke-width="1.5"/>
+<text x="856" y="728" text-anchor="end" font-size="14" fill="#4b5a67">SENSOR ÓPTICO</text></g>
+<rect x="540" y="130" width="330" height="120" fill="#fff" stroke="#7f8c97" stroke-width="3"/>
+<text data-k="tn" x="555" y="156" font-size="17" fill="#5d6b77">EMPACADORA</text>
+<text data-k="tw" x="852" y="228" text-anchor="end" font-size="76" font-weight="700" fill="#1d2830" style="font-variant-numeric:tabular-nums">0.0</text>
+<g font-size="20"><text x="540" y="290" fill="#5d6b77">OBJETIVO</text><text data-k="to" x="870" y="290" text-anchor="end">50.0 kg</text>
+<text x="540" y="326" fill="#5d6b77">ESTADO</text><text data-k="te" x="870" y="326" text-anchor="end">ESPERA</text>
+<text x="540" y="362" fill="#5d6b77">SACOS</text><text data-k="tc" x="870" y="362" text-anchor="end">0</text></g>
+<g data-k="ga" visibility="hidden"><rect x="540" y="395" width="330" height="62" fill="#f9d6d7" stroke="#e5282d" stroke-width="3"/><text data-k="gt" x="705" y="433" text-anchor="middle" font-size="21" font-weight="700" fill="#b0141a">ALARMA</text></g>
+</svg>`;
+const KEYS=['gG','gF','dL','dR','s1','s2','c1','c2','sk','sf','sw','bl','tn','tw','to','te','tc','ga','gt','lv','pd','pm','pl','pw','pp','ft','sb','sl'];
+function build(host,pos,gp){host.insertAdjacentHTML(pos||'beforeend',MACH);const svg=pos==='afterbegin'?host.firstElementChild:host.lastElementChild;
+ const R={svg};KEYS.forEach(k=>R[k]=svg.querySelector('[data-k='+k+']'));R.s1l=[...R.s1.children];R.s2l=[...R.s2.children];
+ R.pd.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();setPed(gp(),1);R.pd.setPointerCapture(e.pointerId)});
+ ['pointerup','pointercancel'].forEach(t=>R.pd.addEventListener(t,()=>{setPed(gp(),0)}));
+ R.pd.addEventListener('click',e=>e.stopPropagation());
+ return R}
+const gate=(p,e,open,el,base)=>{const er=p.ae===e;el.setAttribute('class',base+' '+(er?'er':open?'op':'cl')+(open&&!er?' open':''))};
+const lbl=p=>p.al?'ALARMA':p.mode==='M'?'MANUAL':((p.st==='DESCARGA'||p.st==='LLENO')&&!p.d&&!p.pe&&p.w>0?'ESPERA PEDAL':(p.live&&p.st==='IDLE'?'DETENIDA':ST[p.st]));
+function rm(p,R){
+ const o=p.c.o,frac=Math.min(p.w/o,1.25),ly=548-138*frac;
+ R.lv.setAttribute('y',ly);
+ gate(p,'G',p.g,R.gG,'gt');gate(p,'F',p.f,R.gF,'gt');gate(p,'D',p.d,R.dL,'fl');gate(p,'D',p.d,R.dR,'fl');
+ const f1=p.g&&p.fl.gate?0:(p.g||p.f);
+ R.s1.setAttribute('visibility',f1?'visible':'hidden');
+ if(f1){const y=Math.max(411,ly);R.s1l.forEach((l,i)=>{l.setAttribute('y2',y);l.style.display=(l.classList.contains('ex')&&!p.g)?'none':''})}
+ const f2=p.d&&p.w>0;R.s2.setAttribute('visibility',f2?'visible':'hidden');
+ R.c1.setAttribute('fill',p.ae==='C'?'#e5282d':'#6f8496');R.c2.setAttribute('fill',p.ae==='C'?'#e5282d':'#6f8496');
+ R.sk.setAttribute('transform','translate('+p.sx+',0)');
+ const sh=Math.min(p.sw/o,1)*100;R.sf.setAttribute('y',800-sh);R.sf.setAttribute('height',sh);
+ R.sw.textContent=p.sw.toFixed(1)+' kg';
+ const pe=p.pe,wt=!pe&&!p.d&&!p.al&&p.w>0&&((p.mode==='A'&&(p.st==='DESCARGA'||p.st==='LLENO'))||(p.mode==='M'&&p.m.d));
+ R.pp.classList.toggle('on',pe);R.ft.classList.toggle('on',pe);
+ R.pm.setAttribute('fill',pe?'#2fbf5b':'#a3adb6');R.pp.setAttribute('fill',pe?'#2fbf5b':'#a3adb6');R.pw.setAttribute('stroke',pe?'#2fbf5b':'#9aa6b1');
+ R.pl.textContent=wt?'PISAR PEDAL':'PEDAL OPERADOR';R.pl.setAttribute('fill',wt?'#d97a00':'#4b5a67');R.pl.setAttribute('class',wt?'blink':'');
+ const sbl=p.sx>420;R.sl.setAttribute('fill',(sbl||p.ot>0)?'#2fbf5b':'#a3adb6');R.sb.setAttribute('stroke',sbl?'#2fbf5b':'#e5282d');
+ R.bl.setAttribute('class','belt'+(p.belt?' mv':''));
+ R.tn.textContent='EMPACADORA '+p.n;
+ R.tw.textContent=p.fl.cell?'----':rd(p).toFixed(1);R.tw.setAttribute('fill',p.ae==='C'?'#e5282d':'#1d2830');
+ R.to.textContent=o.toFixed(1)+' kg';R.te.textContent=lbl(p);R.te.setAttribute('fill',p.al?'#e5282d':'#1d2830');R.tc.textContent=p.k;
+ R.ga.setAttribute('visibility',p.al?'visible':'hidden');R.gt.textContent=p.al;R.ga.setAttribute('class',p.al?'blink':'');
+}
+const MAIN=build($('vMain'),'afterbegin',()=>P[sel]);MAIN.svg.style.order=1;
+const CARD=P.map((p,i)=>{const d=document.createElement('div');d.className='cd';d.innerHTML='<b>EMPACADORA '+p.n+'</b>';$('vAll').appendChild(d);
+ d.onclick=()=>{sel=i;show('vMain')};return{d,R:build(d,0,()=>P[i])}});
+P.forEach((p,i)=>{$('hc').insertAdjacentHTML('beforeend','<button class="chip" id="ch'+i+'"><b>EMPACADORA '+p.n+'</b><small></small></button>');
+ $('ch'+i).onclick=()=>{sel=i;if(view==='vCfg')openCfg();else show('vMain')}});
+function render(){
+ const p=P[sel];
+ if(view==='vAll')CARD.forEach((c,i)=>{rm(P[i],c.R);c.d.classList.toggle('al',!!P[i].al)});
+ else{rm(p,MAIN);
+  if(view==='vMain'){
+   $('mA').classList.toggle('on',p.mode==='A');$('mM').classList.toggle('on',p.mode==='M');
+   const a=p.mode==='A';$('bI').disabled=!a||p.run||!!p.al;$('bP').disabled=false;
+   [['mg','g','GRUESA'],['mf','f','FINA'],['md','d','DESCARGA']].forEach(([i,k,t])=>{
+    const b=$(i),on=p.live?p[k]:(k==='d'?(p.m.d&&p.pe):p.m[k]);b.disabled=a||(!!p.al&&k!=='d');b.classList.toggle('open',!!on);b.textContent=t+' · '+(on?'ABIERTA':(p.m[k]?(k==='d'?'REQUIERE PEDAL':'BLOQUEADA'):'CERRADA'))});
+   $('bR').disabled=!p.al;$('pL').checked=!!p.pedL;$('pI').checked=!!p.iByp;
+  }else $('cfR').textContent=p.fl.cell?'----':rd(p).toFixed(2);
+ }
+ P.forEach((q,i)=>{const h=$('ch'+i);h.className='chip'+(i===sel?' sel':'')+(q.al?' al':'');
+  h.lastElementChild.textContent=(q.live?'● ':'')+(q.fl.cell?'----':rd(q).toFixed(1))+' kg · '+lbl(q)});
+}
+/* ---------- Navegación y configuración ---------- */
+const cfgJ=()=>{const v=i=>parseFloat($(i).value)||0;$('cfJ').textContent=JSON.stringify({cmd:'config',objetivo:v('iO'),grueso:v('iC'),colaG:v('iG'),colaF:v('iF')})};
+function openCfg(){const p=P[sel];$('cfT').textContent='AJUSTES · EMPACADORA '+p.n;
+ $('iO').value=p.c.o;$('iC').value=p.c.c;$('iG').value=p.c.g;$('iF').value=p.c.f;
+ $('fO').checked=!!p.opr;$('fC').checked=!!p.fl.cell;$('fG').checked=!!p.fl.gate;$('cfM').textContent='Factor span: '+p.span.toFixed(3);cfgJ();sUI()}
+function show(v){
+ view=v;$('vMain').classList.toggle('show',v!=='vAll');$('vMain').classList.toggle('cfgm',v==='vCfg');$('vAll').classList.toggle('show',v==='vAll');
+ document.querySelectorAll('nav .bt').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+ if(v==='vCfg')openCfg()}
+document.querySelectorAll('nav .bt').forEach(b=>b.onclick=()=>show(b.dataset.v));
+['iO','iC','iG','iF'].forEach(i=>$(i).oninput=cfgJ);
+$('mA').onclick=()=>{const p=P[sel];p.mode='A';p.m={g:0,f:0,d:0};p.st='IDLE';txp({cmd:'mode',value:'auto'})};
+$('mM').onclick=()=>{const p=P[sel];p.mode='M';p.run=false;p.st='IDLE';txp({cmd:'mode',value:'manual'})};
+$('bI').onclick=()=>{const p=P[sel];if(p.live)tx(p,{cmd:'start'});else p.run=true};
+$('bP').onclick=()=>{const p=P[sel];if(p.live){p.m={g:0,f:0,d:0};tx(p,{cmd:'stop'})}else stopNow(p)};
+$('bR').onclick=()=>{const p=P[sel];if(p.live){tx(p,{cmd:'ack'});return}p.al='';p.ae='';p.fl.cell=p.fl.gate=0};
+[['mg','g'],['mf','f'],['md','d']].forEach(([i,k])=>$(i).onclick=()=>{const p=P[sel];p.m[k]=p.m[k]?0:1;txp({cmd:'manual',valvula:{g:'grueso',f:'fino',d:'descarga'}[k],value:!!p.m[k]})});
+$('bA').onclick=()=>{const p=P[sel],v=i=>parseFloat($(i).value)||0;
+ p.c.o=Math.max(1,v('iO'));p.c.c=Math.min(v('iC'),p.c.o);p.c.g=v('iG');p.c.f=v('iF');openCfg();$('cfM').textContent='Ajustes aplicados';txp({cmd:'config',objetivo:p.c.o,grueso:p.c.c,colaG:p.c.g,colaF:p.c.f})};
+$('bZ').onclick=()=>{const p=P[sel];if(!p.live)p.off=p.w;$('cfM').textContent='Cero aplicado';txp({cmd:'zero'})};
+$('bS').onclick=()=>{const p=P[sel],pt=parseFloat($('iS').value)||0,r=p.w-p.off;
+ if(r>1&&pt>0){if(p.live){$('cfM').textContent='Span enviado al ESP32';txp({cmd:'span',patron:pt})}else{p.span=pt/r;$('cfM').textContent='Factor span: '+p.span.toFixed(3)}}
+ else $('cfM').textContent='Carga el peso patrón en el balde (modo manual) antes de aplicar span.'};
+$('fC').onchange=e=>P[sel].fl.cell=e.target.checked?1:0;
+$('fG').onchange=e=>P[sel].fl.gate=e.target.checked?1:0;
+$('fO').onchange=e=>P[sel].opr=e.target.checked?1:0;
+$('pL').onchange=e=>{const p=P[sel];p.pedL=e.target.checked?1:0;if(p.live)tx(p,{cmd:'bypass',pedal:!!p.pedL})};
+$('pI').onchange=e=>{const p=P[sel];p.iByp=e.target.checked?1:0;if(p.live)tx(p,{cmd:'bypass',inicio:!!p.iByp});else if(p.iByp&&p.mode==='A'&&!p.al)p.run=true};
+addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&e.target===document.body){e.preventDefault();setPed(P[sel],1)}});
+addEventListener('keyup',e=>{if(e.code==='Space')setPed(P[sel],0)});
+/* ---------- Puerto serial por empacadora (Web Serial, Chrome/Edge) ---------- */
+P.forEach(p=>{p.sr=null;p.log=[];p.sMsg=''});
+const AL={1:['SOBRELLENADO DEL BALDE','G'],2:['SIN LECTURA DE PESO','C'],3:['TIEMPO DE LLENADO EXCEDIDO','G'],4:['DESCARGA INCOMPLETA','D']};
+function lg(p,s){p.log.push(s);if(p.log.length>6)p.log.shift();if(P[sel]===p)$('sLog').textContent=p.log.join('\n')}
+function sUI(){const p=P[sel],on=!!p.sr;$('sDot').style.background=on?'#2fbf5b':'#a3adb6';
+ $('sSt').textContent=p.sMsg||(on?'Conectado · '+p.sr.baud+' baud':'Desconectado');
+ $('sCon').disabled=on;$('sDis').disabled=!on;$('sBd').disabled=on;$('sLog').textContent=p.log.length?p.log.join('\n'):'Sin datos'}
+async function tx(p,o){if(!p.sr)return;try{await p.sr.w.write(new TextEncoder().encode(JSON.stringify(o)+'\n'));if(o.cmd!=='pedal')lg(p,'TX '+JSON.stringify(o))}catch(e){lg(p,'Error TX: '+e.message)}}
+function txp(o){const p=P[sel];if(p.live)tx(p,o)}
+function setPed(p,v){p.ped=v;clearInterval(p.pI);if(p.live){tx(p,{cmd:'pedal',value:!!v});if(v)p.pI=setInterval(()=>tx(p,{cmd:'pedal',value:true}),1000)}}
+function rxData(p,d){
+ if(d.peso!==undefined){const nw=+d.peso;if(d.descarga&&nw<p.w)p.sw+=p.w-nw;p.w=nw}
+ [['g','grueso'],['f','fino'],['d','descarga']].forEach(([k,n])=>{if(d[n]!==undefined)p[k]=d[n]?1:0});
+ if(d.pedal!==undefined)p.pedX=d.pedal?1:0;
+ if(d.auto!==undefined)p.mode=d.auto?'A':'M';
+ if(d.estado!==undefined){if(d.estado===1&&p.est!==1)p.sw=0;p.est=d.estado;
+  p.st=['IDLE',p.f&&!p.g?'FINO':'GRUESO','LLENO','DESCARGA'][d.estado]||'IDLE';p.run=d.estado>0}
+ if(d.man!==undefined){p.m.g=d.man&1?1:0;p.m.f=d.man&2?1:0;p.m.d=d.man&4?1:0}
+ if(d.pOk!==undefined)p.fl.cell=d.pOk?0:1;
+ if(d.alarma!==undefined){const a=AL[d.alarma];p.al=a?a[0]:'';p.ae=a?a[1]:''}
+ if(d.obj!==undefined){p.c.o=+d.obj;p.c.c=+d.corte;p.c.g=+d.cg;p.c.f=+d.cf}}
+async function rx(p){const sr=p.sr;
+ const dec=new TextDecoderStream();sr.done=sr.port.readable.pipeTo(dec.writable).catch(()=>{});sr.r=dec.readable.getReader();
+ try{for(;;){const{value,done}=await sr.r.read();if(done)break;sr.buf+=value;const ls=sr.buf.split('\n');sr.buf=ls.pop();
+  ls.forEach(l=>{l=l.trim();if(!l)return;let d;try{d=JSON.parse(l)}catch(e){return}
+   rxData(p,d);p.rxN=(p.rxN||0)+1;if(p.rxN%10===1)lg(p,'RX '+l)})}}
+ catch(e){lg(p,'Error RX: '+e.message);if(p.sr===sr)drop(p,'Se perdió la conexión')}}
+async function drop(p,msg){const sr=p.sr;if(!sr)return;p.sr=null;
+ Object.assign(p,{live:0,pedX:0,st:'IDLE',run:false,g:0,f:0,d:0,mode:'A'});
+ try{if(sr.r){await sr.r.cancel();await sr.done}}catch(e){}
+ try{sr.w.releaseLock()}catch(e){}
+ try{await sr.port.close()}catch(e){}
+ p.sMsg=msg||'';lg(p,msg||'Puerto cerrado');sUI()}
+$('sCon').onclick=async()=>{const p=P[sel];
+ if(!navigator.serial){p.sMsg='Web Serial no disponible. Usa Chrome o Edge.';sUI();return}
+ try{const port=await navigator.serial.requestPort(),baud=+$('sBd').value;await port.open({baudRate:baud});
+  p.sMsg='';p.sr={port,baud,w:port.writable.getWriter(),buf:''};
+  Object.assign(p,{live:1,off:0,span:1,run:false,al:'',ae:'',sx:0,tx:0,sw:0,m:{g:0,f:0,d:0}});
+  const i=port.getInfo();lg(p,'Puerto abierto'+(i.usbVendorId?' (USB '+i.usbVendorId.toString(16)+':'+i.usbProductId.toString(16)+')':''));
+  port.addEventListener('disconnect',()=>drop(p,'Puerto desconectado'));sUI();rx(p)}
+ catch(e){p.sMsg=e.name==='SecurityError'?'Esta vista bloquea el puerto serial. Abre el archivo HTML descargado en Chrome o Edge.':e.name==='NotFoundError'?'':'No se pudo conectar: '+e.message;sUI()}};
+$('sDis').onclick=()=>drop(P[sel],'');
+let last=performance.now();
+(function loop(t){const dt=Math.min((t-last)/1000,.1);last=t;P.forEach(p=>step(p,dt));render();requestAnimationFrame(loop)})(last);
+</script>
+</body>
+</html>
